@@ -1,5 +1,5 @@
 "use client"
-import {Button }from '@/components/ui/Button'
+import {Button }from '@/components/ui/button'
 import React,{useEffect, useState} from 'react'
 import { Camera, Video } from 'lucide-react'
 import { supabase } from '@/services/supabaseClient'
