@@ -45,7 +45,7 @@ function Login() {
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-white">
       <div className="flex flex-col items-center justify-center mb-8">
         <Image 
-          src="/logo.png" 
+          src="/Logo.png" 
           alt="logo" 
           width={180}
           height={180}
@@ -87,5 +87,6 @@ function Login() {
     </div>
   );
 };
+
 
 export default Login;
