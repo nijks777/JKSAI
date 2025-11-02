@@ -1,9 +1,9 @@
 import { FEEDBACK_PROMPT } from "@/services/Constants";
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
+const anthropic = new Anthropic({
+    apiKey: process.env.CLAUDE_API_KEY
 });
 
 export async function POST(req) {
@@ -11,22 +11,21 @@ export async function POST(req) {
     const FINAL_PROMPT = FEEDBACK_PROMPT.replace('{{conversation}}', JSON.stringify(conversation));
 
     try {
-        const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+        const response = await anthropic.messages.create({
+            model: "claude-3-5-haiku-20241022",
+            max_tokens: 4096,
             messages: [
                 {
-                    role: "system",
-                    content: "You are a technical interview evaluator. Respond with ONLY valid JSON without any markdown formatting, code blocks, or additional text. Your response must be parseable directly by JSON.parse() without any cleaning."
-                },
-                { role: "user", content: FINAL_PROMPT }
-            ],
-            response_format: { type: "json_object" }
+                    role: "user",
+                    content: `You are a technical interview evaluator. Respond with ONLY valid JSON without any markdown formatting, code blocks, or additional text. Your response must be parseable directly by JSON.parse() without any cleaning.\n\n${FINAL_PROMPT}`
+                }
+            ]
         });
 
-        console.log("AI Response:", response.choices[0].message);
+        console.log("AI Response:", response.content[0]);
 
         // Get the content from the response
-        let content = response.choices[0].message.content;
+        let content = response.content[0].text;
         
         // Clean the content to remove any markdown code blocks or extra formatting
         content = content.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim();

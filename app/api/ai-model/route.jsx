@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
+const anthropic = new Anthropic({
+    apiKey: process.env.CLAUDE_API_KEY
 });
 
 // Define your prompt template
@@ -36,15 +36,18 @@ export async function POST(req) {
         if (prompt && !jobPosition) {
             console.log("Simple prompt request:", prompt);
 
-            const response = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
+            const response = await anthropic.messages.create({
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 1024,
                 messages: [
-                    { role: "system", content: "You are a helpful assistant. Provide clear, concise responses." },
-                    { role: "user", content: prompt }
+                    {
+                        role: "user",
+                        content: `You are a helpful assistant. Provide clear, concise responses.\n\n${prompt}`
+                    }
                 ]
             });
 
-            const content = response.choices[0].message.content;
+            const content = response.content[0].text;
             console.log("AI Response:", content);
 
             // Return the plain text content for job description
@@ -59,19 +62,21 @@ export async function POST(req) {
 
         console.log("Final Prompt for Questions:", FINAL_PROMPT);
 
-        const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+        const response = await anthropic.messages.create({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 4096,
             messages: [
-                { role: "system", content: "You must respond with valid JSON only. No markdown, no text, just JSON." },
-                { role: "user", content: FINAL_PROMPT }
-            ],
-            response_format: { type: "json_object" }
+                {
+                    role: "user",
+                    content: `You must respond with valid JSON only. No markdown, no text, just JSON.\n\n${FINAL_PROMPT}`
+                }
+            ]
         });
 
-        console.log("AI Response:", response.choices[0].message);
+        console.log("AI Response:", response.content[0]);
 
         // Get the content from the response
-        const content = response.choices[0].message.content;
+        const content = response.content[0].text;
 
         // Try to parse as JSON first
         try {
