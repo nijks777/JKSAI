@@ -37,7 +37,7 @@ export async function POST(req) {
             console.log("Simple prompt request:", prompt);
 
             const response = await anthropic.messages.create({
-                model: "claude-sonnet-4-20250514",
+                model: "claude-3-5-haiku-20241022",
                 max_tokens: 1024,
                 messages: [
                     {
@@ -63,7 +63,7 @@ export async function POST(req) {
         console.log("Final Prompt for Questions:", FINAL_PROMPT);
 
         const response = await anthropic.messages.create({
-            model: "claude-sonnet-4-20250514",
+            model: "claude-3-5-haiku-20241022",
             max_tokens: 4096,
             messages: [
                 {
