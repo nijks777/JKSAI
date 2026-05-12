@@ -133,25 +133,31 @@ function QuestionList({ formData,onCreateLink}) {
         setSaveLoading(true);
         const interview_id=uuidv4();
 
-        const { error } = await supabase
-        .from('Interviews')
-        .insert([
-        {
-            ...formData,
+        const payload = {
+            jobPosition: formData?.jobPosition,
+            jobDescription: formData?.jobDescription,
+            duration: formData?.duration,
+            type: formData?.type,
             questionList: questionList,
-            userEmail:user?.email,
-            interview_id:interview_id
-        },
-        ])
-        .select()
+            userEmail: user?.email,
+            interview_id: interview_id,
+        };
+
+        console.log('Saving interview payload:', payload);
+
+        const { data, error } = await supabase
+            .from('Interviews')
+            .insert([payload])
+            .select();
 
         if (error) {
-            console.error('Error saving interview:', error);
-            toast.error('Failed to save interview. Please try again.');
+            console.error('Error saving interview:', JSON.stringify(error));
+            toast.error(`Failed to save: ${error.message || error.code || 'Check RLS is disabled in Supabase'}`);
             setSaveLoading(false);
             return;
         }
 
+        console.log('Interview saved:', data);
         setSaveLoading(false);
         toast.success('Interview created successfully!');
         onCreateLink(interview_id);

@@ -3,18 +3,11 @@ import { Calendar, Clock, MessageCircleQuestionIcon } from 'lucide-react'
 import moment from 'moment'
 
 function InterviewDetailContainer({interviewDetail}) {
-  // Safely parse the interview type
   const getInterviewType = () => {
-    try {
-      if (interviewDetail?.type) {
-        const parsedType = JSON.parse(interviewDetail.type);
-        return Array.isArray(parsedType) && parsedType.length > 0 ? parsedType[0] : 'N/A';
-      }
-      return 'N/A';
-    } catch (error) {
-      console.error('Error parsing interview type:', error);
-      return 'N/A';
-    }
+    const type = interviewDetail?.type;
+    if (Array.isArray(type) && type.length > 0) return type.join(', ');
+    if (typeof type === 'string' && type.length > 0) return type;
+    return 'N/A';
   };
 
   return (
@@ -51,7 +44,7 @@ function InterviewDetailContainer({interviewDetail}) {
         <div className='mt-5'>
             <h2 className='font-bold'>Interview Questions</h2>
             <div className='grid grid-cols-2 gap-3 mt-3'>
-    {interviewDetail?.questionList.map((item, index) => (
+    {interviewDetail?.questionList?.map((item, index) => (
         <h2 className='text-sm flex' key={index}>
             <MessageCircleQuestionIcon className='h-4 w-4 text-primary'/>{index+1}.{item?.question}
         </h2>

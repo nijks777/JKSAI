@@ -71,7 +71,7 @@ function CandidatList({candidateList}) {
     
     // Create email with subject and body
     const subject = 'Next Interview Round Selection'
-    const body = `Dear ${candidate.userName},\n\nCongratulations! You have been selected for the next round of interviews.\n\nPlease let us know your availability for the upcoming week.\n\nBest regards,\nRecruitment Team`
+    const body = `Dear ${candidate.username},\n\nCongratulations! You have been selected for the next round of interviews.\n\nPlease let us know your availability for the upcoming week.\n\nBest regards,\nRecruitment Team`
     
     // Create mailto link
     window.location.href = `mailto:${candidate.userEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
@@ -130,12 +130,13 @@ function CandidatList({candidateList}) {
           <div key={index} className='p-5 flex gap-3 items-center justify-between bg-white rounded-lg mb-3'>
             <div className='flex items-center gap-5'>
               <h2 className='bg-primary p-3 px-4.5 font-bold text-white rounded-full'>
-                {candidate?.userName?.[0] || '?'}
+                {candidate?.username?.[0] || '?'}
               </h2>
               <div>
                 <h2>
-                  {candidate?.userName || 'Unknown Candidate'}
+                  {candidate?.username || 'Unknown Candidate'}
                 </h2>
+                <h2 className='text-sm text-gray-400'>{candidate?.userEmail}</h2>
                 <div className='flex items-center gap-2'>
                   <h2 className='text-sm text-gray-500'>
                     Completed On: {moment(candidate?.created_at).format('MMM DD, YYYY')}
@@ -171,7 +172,7 @@ function CandidatList({candidateList}) {
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className='text-xl font-bold'>
-                  Candidate Report: {selectedCandidate?.userName}
+                  Candidate Report: {selectedCandidate?.username}
                 </h3>
                 <p className='text-sm text-gray-500'>
                   Completed On: {moment(selectedCandidate?.created_at).format('MMM DD, YYYY')}

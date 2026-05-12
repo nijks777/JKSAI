@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useContext } from 'react'
 import { InterviewDataContext } from '@/context/InterviewDataContext'
 import {Timer} from 'lucide-react'
@@ -16,7 +16,11 @@ import { useRouter } from 'next/navigation'
 
 function StartInterview() {
     const {interviewInfo, setInterviewInfo} = useContext(InterviewDataContext);
-    const vapi = new Vapi(process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY);
+    const vapiRef = useRef(null);
+    if (!vapiRef.current) {
+        vapiRef.current = new Vapi(process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY);
+    }
+    const vapi = vapiRef.current;
     const [activeUser, setActiveUser] = useState(false);
     const [conversation, setConversation] = useState();
     const {interview_id} = useParams();
@@ -41,12 +45,12 @@ function StartInterview() {
                 language: "en-US",
             },
             voice: {
-                provider: "playht",
-                voiceId: "jennifer",
+                provider: "openai",
+                voiceId: "alloy",
             },
             model: {
                 provider: "openai",
-                model: "gpt-4",
+                model: "gpt-4o-mini",
                 messages: [
                     {
                         role: "system",
@@ -92,8 +96,14 @@ function StartInterview() {
                 ],
             },
         };
-        vapi.start(assistantOptions)
-    }        
+        try {
+            console.log("Starting Vapi with key:", process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY?.slice(0, 8) + "...");
+            await vapi.start(assistantOptions);
+        } catch (err) {
+            console.error("Vapi start error:", err?.message, err?.status, JSON.stringify(err));
+            toast.error("Failed to start interview call: " + (err?.message || "Unknown error"));
+        }
+    }      
     
     const stopInterview = () => {
         toast.info("Ending interview...");
@@ -132,8 +142,13 @@ function StartInterview() {
                 console.log(message);
                 setConversation(message);
             });
+
+            vapi.on("error", (error) => {
+                console.error("Vapi error event:", JSON.stringify(error));
+                toast.error("Vapi error: " + (error?.message || error?.error?.message || JSON.stringify(error)));
+            });
         };
-        
+
         setupEventListeners();
     }, []);
     
@@ -150,7 +165,7 @@ function StartInterview() {
                 
                 // Create a fallback feedback object for Supabase
                 const feedbackData = {
-                    userName: interviewInfo?.userName || "Unknown",
+                    username: interviewInfo?.userName || "Unknown",
                     userEmail: interviewInfo?.userEmail || "unknown@example.com",
                     interview_id: interview_id,
                     feedback: JSON.stringify({
@@ -231,10 +246,10 @@ function StartInterview() {
             
             // Create a properly formatted object for Supabase
             const feedbackData = {
-                userName: interviewInfo?.userName || "Unknown",
+                username: interviewInfo?.userName || "Unknown",
                 userEmail: interviewInfo?.userEmail || "unknown@example.com",
                 interview_id: interview_id,
-                feedback: parsedContent, // This is now a string
+                feedback: parsedContent,
                 recommended: false
             };
             

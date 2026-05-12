@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
-const anthropic = new Anthropic({
-    apiKey: process.env.CLAUDE_API_KEY
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
 });
 
-// Define your prompt template
 const QUESTIONS_PROMPT = `You are an expert technical interviewer.
 Based on the following inputs, generate a well-structured list of high-quality interview questions:
 Job Title: {{jobTitle}}
@@ -32,29 +31,29 @@ export async function POST(req) {
         const body = await req.json();
         const {jobPosition, jobDescription, duration, type, prompt} = body;
 
-        // Check if this is a simple prompt request (for job description generation)
         if (prompt && !jobPosition) {
             console.log("Simple prompt request:", prompt);
 
-            const response = await anthropic.messages.create({
-                model: "claude-3-5-haiku-20241022",
+            const response = await openai.chat.completions.create({
+                model: "gpt-4.1-nano",
                 max_tokens: 1024,
                 messages: [
                     {
+                        role: "system",
+                        content: "You are a helpful assistant. Provide clear, concise responses."
+                    },
+                    {
                         role: "user",
-                        content: `You are a helpful assistant. Provide clear, concise responses.\n\n${prompt}`
+                        content: prompt
                     }
                 ]
             });
 
-            const content = response.content[0].text;
+            const content = response.choices[0].message.content;
             console.log("AI Response:", content);
-
-            // Return the plain text content for job description
             return NextResponse.json(content);
         }
 
-        // Otherwise, handle interview questions generation
         const FINAL_PROMPT = QUESTIONS_PROMPT.replace("{{jobTitle}}", jobPosition || "")
             .replace("{{jobDescription}}", jobDescription || "")
             .replace("{{duration}}", duration || "")
@@ -62,45 +61,39 @@ export async function POST(req) {
 
         console.log("Final Prompt for Questions:", FINAL_PROMPT);
 
-        const response = await anthropic.messages.create({
-            model: "claude-3-5-haiku-20241022",
+        const response = await openai.chat.completions.create({
+            model: "gpt-4.1-nano",
             max_tokens: 4096,
             messages: [
                 {
+                    role: "system",
+                    content: "You must respond with valid JSON only. No markdown, no text, just JSON."
+                },
+                {
                     role: "user",
-                    content: `You must respond with valid JSON only. No markdown, no text, just JSON.\n\n${FINAL_PROMPT}`
+                    content: FINAL_PROMPT
                 }
             ]
         });
 
-        console.log("AI Response:", response.content[0]);
+        const content = response.choices[0].message.content;
+        console.log("AI Response:", content);
 
-        // Get the content from the response
-        const content = response.content[0].text;
-
-        // Try to parse as JSON first
         try {
-            // If it's already valid JSON, just parse it
             const parsedData = JSON.parse(content);
             return NextResponse.json(parsedData);
         } catch (parseError) {
-            // If not valid JSON, check for special format
             if (content.includes("interviewQuestions=[")) {
                 try {
-                    // Extract the array part
                     const match = content.match(/interviewQuestions=(\[[\s\S]*\])/);
                     if (match) {
-                        const jsonArray = match[1];
-                        // Parse the array and return it in proper JSON format
-                        const parsedArray = JSON.parse(jsonArray);
+                        const parsedArray = JSON.parse(match[1]);
                         return NextResponse.json({ interviewQuestions: parsedArray });
                     }
                 } catch (e) {
                     console.error("Error parsing array format:", e);
                 }
             }
-
-            // If all parsing attempts fail, return the raw content
             return NextResponse.json({ content: content });
         }
     } catch (e) {

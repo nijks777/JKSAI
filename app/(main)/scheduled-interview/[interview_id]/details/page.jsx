@@ -19,7 +19,7 @@ function InterviewDetail() {
     const GetInterviewDetails=async()=>{
                 const result=await supabase.from('Interviews')
                 .select(`created_at,jobPosition,jobDescription,type,questionList,duration,interview_id,
-                    interview-feedback(userEmail,userName,feedback,created_at)`)
+                    interview-feedback(userEmail,username,feedback,created_at)`)
                 .eq('userEmail',user?.email)
                 .eq('interview_id', interview_id)
                 .order('id', { ascending: false });
